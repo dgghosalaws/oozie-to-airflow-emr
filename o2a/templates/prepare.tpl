@@ -12,12 +12,22 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+ #}
+
+{#
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
 #}
 
 {% import "macros/props.tpl" as props_macro %}
-{{ task_id | to_var }} = bash_operator.BashOperator(
+{{ task_id | to_var }} = EmrSubmitAndMonitorStepOperator(
     task_id={{ task_id | to_python }},
     trigger_rule={{ trigger_rule | to_python }},
-    bash_command={% include "prepare_command.tpl" %},
+    {% if delete is not none %} steps = [{'Name': {{ task_id | to_python }},'ActionOnFailure': 'CONTINUE','HadoopJarStep': {'Jar': 'command-runner.jar','Args': ['/bin/bash','-c',' hdfs dfs -rm -f -r {}'.format(shlex.quote({{ delete | to_python }}))],},}],{% endif %}
+    {% if mkdir is not none %}steps = [{'Name': {{ task_id | to_python }},'ActionOnFailure': 'CONTINUE','HadoopJarStep': {'Jar': 'command-runner.jar','Args': ['/bin/bash','-c','hdfs dfs -mkdir -p {}'.format(shlex.quote({{ mkdir | to_python }}))],},}],{% endif %}
     params={{ props_macro.props(action_node_properties=action_node_properties) }},
+    job_flow_id=CONFIG['emr_cluster'],
+    aws_conn_id=CONFIG['aws_conn_id'],
 )

@@ -12,6 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Tests for param extractor"""
 import unittest
 
@@ -24,7 +41,7 @@ class ParamExtractorModuleTestCase(unittest.TestCase):
     def test_extract_param_values_from_action_node_should_return_empty_dict_when_not_found(self):
         node = ET.fromstring("<dummy></dummy>")
         result = extract_param_values_from_action_node(node)
-        self.assertEqual({}, result)
+        self.assertEqual([], result)
 
     def test_extract_param_values_from_action_node_should_parse_single_value(self):
         # language=XML
@@ -35,7 +52,7 @@ class ParamExtractorModuleTestCase(unittest.TestCase):
         """
         node = ET.fromstring(xml_content)
         result = extract_param_values_from_action_node(node)
-        self.assertEqual({"INPUT": "VALUE"}, result)
+        self.assertEqual(['-d', 'INPUT=VALUE'], result)
 
     def test_extract_param_values_from_action_node_should_parse_multiple_value(self):
         # language=XML
@@ -47,7 +64,7 @@ class ParamExtractorModuleTestCase(unittest.TestCase):
         """
         node = ET.fromstring(xml_content)
         result = extract_param_values_from_action_node(node)
-        self.assertEqual({"INPUT1": "VALUE1", "INPUT2": "VALUE2"}, result)
+        self.assertEqual(['-d', 'INPUT1=VALUE1', '-d', 'INPUT2=VALUE2'], result)
 
     def test_extract_param_values_from_action_node_should_support_el_value(self):
         # language=XML
@@ -60,9 +77,7 @@ class ParamExtractorModuleTestCase(unittest.TestCase):
         node = ET.fromstring(xml_content)
         result = extract_param_values_from_action_node(node)
         self.assertEqual(
-            {
-                "INPUT": "/user/{{userName}}/{{examplesRoot}}/apps/hive/input/",
-                "OUTPUT": "/user/{{userName}}/{{examplesRoot}}/apps/hive/output/",
-            },
+            ['-d', 'INPUT=/user/{{userName}}/{{examplesRoot}}/apps/hive/input/','-d','OUTPUT=/user/{{userName}}/{{examplesRoot}}/apps/hive/output/']
+       ,
             result,
         )

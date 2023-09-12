@@ -12,6 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Tests give mapper"""
 import ast
 import unittest
@@ -104,6 +121,7 @@ class TestHiveMapper(unittest.TestCase):
         mapper.on_parse_node()
 
         tasks, relations = mapper.to_tasks_and_relations()
+        print(tasks)
 
         self.assertEqual(
             [
@@ -129,7 +147,7 @@ class TestHiveMapper(unittest.TestCase):
                         ),
                         "archives": [],
                         "files": [],
-                        "variables": {},
+                        "variables": ['hive-script', '--run-hive-script', '--args', '-f', 'None'],
                     },
                 )
             ],
@@ -168,10 +186,7 @@ class TestHiveMapper(unittest.TestCase):
                         ),
                         "archives": [],
                         "files": [],
-                        "variables": {
-                            "INPUT": "/user/{{userName}}/{{examplesRoot}}/apps/hive/input/",
-                            "OUTPUT": "/user/{{userName}}/{{examplesRoot}}/apps/hive/output/",
-                        },
+                        "variables": ['hive-script', '--run-hive-script', '--args', '-f', 'script.q', '-d', 'INPUT=/user/{{userName}}/{{examplesRoot}}/apps/hive/input/', '-d', 'OUTPUT=/user/{{userName}}/{{examplesRoot}}/apps/hive/output/'],
                     },
                 )
             ],
@@ -245,7 +260,7 @@ class TestHiveMapper(unittest.TestCase):
                             "hdfs:///user/{{userName}}/{{examplesRoot}}/apps/pig/test_dir/"
                             "test2.zip#test_link.zip",
                         ],
-                        "variables": {},
+                        "variables": ['hive-script', '--run-hive-script', '--args', '-f', 'None'],
                     },
                 )
             ],
@@ -292,7 +307,7 @@ class TestHiveMapper(unittest.TestCase):
                             "hdfs:///user/TEST_USERNAME/apps/hive/test_dir/test3.zip#test3_zip_dir",
                         ],
                         "files": [],
-                        "variables": {},
+                        "variables": ['hive-script', '--run-hive-script', '--args', '-f', 'None'],
                     },
                 )
             ],

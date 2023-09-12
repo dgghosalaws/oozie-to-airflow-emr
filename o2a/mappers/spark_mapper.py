@@ -12,6 +12,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# Modfified to submit as per EMR Steps.
 """Maps Spark action to Airflow Dag"""
 from typing import Dict, List, Optional, Set
 
@@ -54,9 +72,11 @@ class SparkMapper(ActionMapper):
         self.archive_extractor = ArchiveExtractor(oozie_node=oozie_node, props=self.props)
         self.hdfs_files: List[str] = []
         self.hdfs_archives: List[str] = []
-        self.dataproc_jars: List[str] = []
+        self.emr_jars: List[str] = []
         self.spark_opts: Dict[str, str] = {}
         self.prepare_extension: PrepareMapperExtension = PrepareMapperExtension(self)
+        self.step: Optional[str] = []
+        self.spark_conf: List[str] = []
 
     def on_parse_node(self):
         super().on_parse_node()
@@ -65,16 +85,32 @@ class SparkMapper(ActionMapper):
 
         self.java_jar = get_tag_el_text(self.oozie_node, tag=SPARK_TAG_JAR)
         self.java_class = get_tag_el_text(self.oozie_node, tag=SPARK_TAG_CLASS)
+        print(f"java jar is {self.java_jar}")
+        print(f"java class is {self.java_class}")
         if self.java_class and self.java_jar:
-            self.dataproc_jars = [self.java_jar]
-            self.java_jar = None
+            self.emr_jars = [self.java_jar]
+            #self.java_jar = None
         self.job_name = get_tag_el_text(self.oozie_node, tag=SPARK_TAG_JOB_NAME)
 
         spark_opts = xml_utils.find_nodes_by_tag(self.oozie_node, SPARK_TAG_OPTS)
         if spark_opts:
-            self.spark_opts.update(self._parse_spark_opts(spark_opts[0]))
+            self.spark_conf = self._parse_spark_opts(spark_opts[0])
+            #self.spark_opts.update(self._parse_spark_opts(spark_opts[0]))
 
         self.application_args = xml_utils.get_tags_el_array_from_text(self.oozie_node, tag=SPARK_TAG_ARG)
+        if ".py" in self.java_jar:
+            self.step.insert(0, "spark-submit")
+            self.step.extend(self.spark_conf)
+            self.step.append(self.java_jar)
+            self.step.extend(self.emr_jars)
+            self.step.extend(self.application_args)
+        else:
+            self.step.insert(0, "spark-submit")
+            self.step.extend(self.spark_conf)
+            self.step.append("--class")
+            self.step.append(self.java_class)
+            self.step.extend(self.emr_jars)
+            self.step.extend(self.application_args)
 
     @staticmethod
     def _parse_spark_opts(spark_opts_node: ET.Element):
@@ -83,6 +119,7 @@ class SparkMapper(ActionMapper):
         --conf key1=value
         --conf key2="value1 value2"
         """
+        conf_args = []
         conf: Dict[str, str] = {}
         if spark_opts_node.text:
             spark_opts = spark_opts_node.text.split("--")[1:]
@@ -104,23 +141,27 @@ class SparkMapper(ActionMapper):
                 if len(value) > 2 and value[0] in ["'", '"'] and value:
                     value = value[1:-1]
                 conf[key] = value
+                param_args = key + "=" + value
+                conf_args.append("--conf")
+                conf_args.append(param_args)
             # TODO: parse also other options (like --executor-memory 20G --num-executors 50 and many more)
             #  see: https://oozie.apache.org/docs/5.1.0/DG_SparkActionExtension.html#PySpark_with_Spark_Action
-
-        return conf
+            # Returning List of conf args.
+        return conf_args
 
     def to_tasks_and_relations(self):
         action_task = Task(
             task_id=self.name,
             template_name="spark.tpl",
             template_params=dict(
+                step=self.step,
                 main_jar=self.java_jar,
                 main_class=self.java_class,
                 arguments=self.application_args,
                 hdfs_archives=self.hdfs_archives,
                 hdfs_files=self.hdfs_files,
                 job_name=self.job_name,
-                dataproc_spark_jars=self.dataproc_jars,
+                emr_spark_jars=self.emr_jars,
                 spark_opts=self.spark_opts,
             ),
         )
@@ -129,12 +170,12 @@ class SparkMapper(ActionMapper):
         prepare_task = self.prepare_extension.get_prepare_task()
         if prepare_task:
             tasks, relations = self.prepend_task(prepare_task, tasks, relations)
+        print (tasks)
         return tasks, relations
 
     def required_imports(self) -> Set[str]:
-        # Bash are for the potential prepare statement
+        # Potential prepare statement need some thought
         return {
-            "from airflow.contrib.operators import dataproc_operator",
-            "from airflow.operators import bash_operator",
-            "from airflow.operators import dummy_operator",
+            "from o2a.o2a_libs.operator.emr_submit_and_monitor_step_operator import "
+            "EmrSubmitAndMonitorStepOperator",
         }

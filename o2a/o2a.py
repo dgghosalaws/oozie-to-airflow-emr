@@ -12,6 +12,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#Modifications Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#SPDX-License-Identifier: Apache-2.0
+
 """Main entry point for the Oozie to Airflow converter"""
 import argparse
 import logging
@@ -27,7 +48,9 @@ from o2a.converter.oozie_converter import OozieConverter
 from o2a.converter.constants import HDFS_FOLDER
 from o2a.converter.renderers import PythonRenderer, DotRenderer
 from o2a.transformers.add_node_notificaton_transformer import AddNodeNotificationTransformer
-from o2a.transformers.add_workflow_notificaton_transformer import AddWorkflowNotificationTransformer
+from o2a.transformers.add_workflow_notificaton_transformer import (
+    AddWorkflowNotificationTransformer,
+)
 from o2a.transformers.remove_end_transformer import RemoveEndTransformer
 from o2a.transformers.remove_fork_transformer import RemoveForkTransformer
 from o2a.transformers.remove_inaccessible_node_transformer import RemoveInaccessibleNodeTransformer
@@ -50,7 +73,9 @@ def get_o2a_validate_workflows_script():
         if not os.path.isfile(validate_workflows_script):
             logging.info(f"Skipping workflow validation as the {validate_workflows_script} is missing")
             return None
-    logging.info(f"Found o2a-validate-workflows script at {validate_workflows_script}. Validating workflow")
+    logging.info(
+        f"Found o2a-validate-workflows script at {validate_workflows_script}. Validating workflow"
+    )
     return validate_workflows_script
 
 
@@ -59,13 +84,18 @@ def main():
     args = parse_args(sys.argv[1:])
     input_directory_path = args.input_directory_path
     output_directory_path = args.output_directory_path
+    schema_version = args.schema_version
+    if not schema_version:
+        schema_version = "1.0"
 
+    print("Oozie XML schema_version - > ", schema_version)
     start_days_ago = args.start_days_ago
     schedule_interval = args.schedule_interval
     dag_name = args.dag_name
 
     if not dag_name:
         dag_name = os.path.basename(input_directory_path)
+        print("dag_name - > ", dag_name)
 
     conf_path = os.path.join(input_directory_path, CONFIG)
     if not os.path.isfile(conf_path):
@@ -86,7 +116,7 @@ Otherwise please provide it.
     validate_workflows_script = get_o2a_validate_workflows_script()
     if validate_workflows_script:
         try:
-            check_call([validate_workflows_script, f"{input_directory_path}/{HDFS_FOLDER}/{WORKFLOW_XML}"])
+            check_call([validate_workflows_script, f"{input_directory_path}/{HDFS_FOLDER}/{WORKFLOW_XML}",schema_version])
         except CalledProcessError:
             logging.error(
                 "Workflow failed schema validation. " "Please correct the workflow XML and try again."
@@ -131,7 +161,7 @@ Otherwise please provide it.
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
-        description="Convert Apache Oozie workflows to Apache Airflow workflows."
+        description="Convert Apache Oozie workflows to Amazon Managed Workflows on Apache Airflow."
     )
     parser.add_argument("-i", "--input-directory-path", help="Path to input directory", required=True)
     parser.add_argument("-o", "--output-directory-path", help="Desired output directory", required=True)
@@ -142,6 +172,7 @@ def parse_args(args):
         help="The user to be used in place of all " "${user.name} [defaults to user who ran the conversion]",
     )
     parser.add_argument("-s", "--start-days-ago", help="Desired DAG start as number of days ago", default=0)
+    parser.add_argument("-x", "--schema-version", help="Desired Oozie all schema version.[1.0,0.4]", default="1.0")
     parser.add_argument(
         "-v", "--schedule-interval", help="Desired DAG schedule interval as number of days", default=0
     )

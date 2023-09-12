@@ -1,0 +1,153 @@
+<!--
+  Copyright 2019 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+ -->
+
+<!--
+    Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+    #SPDX-License-Identifier: Apache-2.0
+-->
+<workflow-app name="workflow-demo_offer_outreach" xmlns="uri:oozie:workflow:0.4">
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+    <job-xml>${oozieShareHiveConf}</job-xml>
+  </global>
+  <credentials>
+    <credential name="hcat" type="hcat">
+      <property>
+        <name>hcat.metastore.uri</name>
+        <value>${hcatMetastoreUri}</value>
+      </property>
+      <property>
+        <name>hcat.metastore.principal</name>
+        <value>${hcatMetastorePrincipal}</value>
+      </property>
+    </credential>
+  </credentials>
+
+  <start to="sub-wf-run_begin_oozie"/>
+
+  <!-- Sub-workflow which logs oozie start -->
+  <action name="sub-wf-run_begin_oozie" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="${demo_offer_outreach_running}"/>
+    </fs>
+    <ok to="run_demo_offer_outreach_stage"/>
+    <error to="run_demo_offer_outreach_stage"/>
+  </action>
+
+  <action name="run_demo_offer_outreach_stage" retry-max="2" retry-interval="1" cred="hcat">
+    <hive xmlns="uri:oozie:hive-action:0.5">
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_stage_ddl}</script>
+    </hive>
+    <ok to="run_demo_offer_outreach_pig"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+
+  <action name="run_demo_offer_outreach_pig"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_pig_file}</script>
+      <file>${jar_location}/piggybank.jar</file>
+    </pig>
+    <ok to="create_offer_outreach_external_resource_table"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+
+  <action name="create_offer_outreach_external_resource_table"  retry-max="2" retry-interval="1" cred="hcat">
+    <hive xmlns="uri:oozie:hive-action:0.5">
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_hive_file}</script>
+    </hive>
+    <ok to="write_success_flag"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+
+  <action name="write_success_flag" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="${success_dir}/${YESTERDAY_DATE}" />
+      <touchz path="${success_dir}/${YESTERDAY_DATE}/_SUCCESS_DAILY" />
+    </fs>
+    <ok to="sub-wf-log_success_oozie" />
+    <error to="sub-wf-log_failure_oozie" />
+  </action>
+
+  <!-- Sub-workflow which use logs success entry to replace send success email -->
+  <action name="sub-wf-log_success_oozie" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="${demo_offer_outreach_running}"/>
+    </fs>
+    <ok to="success" />
+    <error to="kill" />
+  </action>
+
+  <!-- Sub-workflow which use logs failure entry before send failure email -->
+  <action name="sub-wf-log_failure_oozie" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="${demo_offer_outreach_running}"/>
+    </fs>
+    <ok to="send_failure_email" />
+    <error to="send_failure_email" />
+  </action>
+
+  <action name="send_failure_email">
+    <email xmlns="uri:oozie:email-action:0.1">
+      <to>${emailGroup}</to>
+      <subject>Oozie failure for dp_enterprise.demo_offer_outreach DAILY for ${TODAY_DATE}
+      </subject>
+      <body>
+        Bundle bundle-uds_offer_outreach_external_resource
+          : Coordinator coordinator-demo_offer_outreach
+            : Workflow workflow-demo_offer_outreach
+
+        The dp_enterprise.demo_offer_outreach process for ETL_DATE=${TODAY_DATE} with id ${wf:id()} failed with message:
+          [${wf:errorMessage(wf:lastErrorNode())}]
+      </body>
+    </email>
+      <ok to="kill" />
+      <error to="EmailFailed" />
+   </action>
+
+   <kill name="EmailFailed">
+      <message>Error E-Mail failed to send:
+      [${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+
+  <kill name="kill">
+      <message>Action failed, error message:
+      [${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+
+  <end name="success" />
+
+</workflow-app>

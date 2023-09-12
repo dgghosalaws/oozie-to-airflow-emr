@@ -1,0 +1,15 @@
+{
+  "ClusterId": "j-3G9CADCILAMTV",
+  "InstanceGroups": [
+  {
+    "InstanceGroupId": "ig-1HL5280DZJ5SN",
+    "Configurations": [
+    {
+      "Classification": "emrfs-site",
+      "Properties": {
+        "fs.s3.consistent": "false"
+      },
+    "Configurations": []
+    }]
+  }]
+}

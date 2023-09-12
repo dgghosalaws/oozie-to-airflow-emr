@@ -12,7 +12,10 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
-#}
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+ #}
+
 {% for task_group in task_groups %}
 {% for task in task_group.all_tasks %}
 {{ task.rendered_template }}

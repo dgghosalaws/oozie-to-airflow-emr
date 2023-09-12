@@ -1,0 +1,1633 @@
+<!--
+  Copyright 2019 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+ -->
+
+<workflow-app name="workflow-demo_offer_outreach_tx" xmlns="uri:oozie:workflow:0.4">
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+    <job-xml>${oozieShareHiveConf}</job-xml>
+  </global>
+  <credentials>
+    <credential name="hcat" type="hcat">
+      <property>
+        <name>hcat.metastore.uri</name>
+        <value>${hcatMetastoreUri}</value>
+      </property>
+      <property>
+        <name>hcat.metastore.principal</name>
+        <value>${hcatMetastorePrincipal}</value>
+      </property>
+    </credential>
+  </credentials>
+
+  <start to="sub-wf-run_begin_oozie"/>
+
+  <!-- Sub-workflow which logs oozie start -->
+  <action name="sub-wf-run_begin_oozie" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="dummy"/>
+    </fs>
+    <ok to="create_running_flag"/>
+    <error to="create_running_flag"/>
+  </action>
+
+  <action name="create_running_flag">
+    <fs>
+      <mkdir path="${demo_offer_outreach_running}"/>
+    </fs>
+    <ok to="recreate_stage_table" />
+    <error to="sub-wf-log_failure_oozie" />
+  </action>
+
+  <action name="recreate_stage_table" retry-max="2" retry-interval="1" cred="hcat">
+    <hive xmlns="uri:oozie:hive-action:0.5">
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_tx_stage_ddl}</script>
+    </hive>
+    <ok to="forking" />
+    <error to="sub-wf-log_failure_oozie" />
+  </action>
+
+  <fork name="forking">
+    <path start="process_offer_outreach_thirdprty_adspace_tx"/>
+    <path start="process_offer_outreach_thirdprty_brandcatch_tx"/>
+    <path start="process_offer_outreach_thirdprty_brokerage_tx"/>
+    <path start="process_offer_outreach_thirdprty_calendar_tx"/>
+    <path start="process_offer_outreach_thirdprty_cashpark_tx"/>
+    <path start="process_offer_outreach_thirdprty_cdn_tx"/>
+    <path start="process_offer_outreach_thirdprty_coldfusion_tx"/>
+    <path start="process_offer_outreach_thirdprty_custmgr_tx"/>
+    <path start="process_offer_outreach_thirdprty_datacenter_tx"/>
+    <path start="process_offer_outreach_thirdprty_dedhost_tx"/>
+    <path start="process_offer_outreach_thirdprty_dedicatedip_tx"/>
+    <path start="process_offer_outreach_thirdprty_deluxestat_tx"/>
+    <path start="process_offer_outreach_thirdprty_domainasset_tx"/>
+    <path start="process_offer_outreach_thirdprty_domainrep_tx"/>
+    <path start="process_offer_outreach_thirdprty_easydb_tx"/>
+    <path start="process_offer_outreach_thirdprty_email_tx"/>
+    <path start="process_offer_outreach_thirdprty_emailfwd_tx"/>
+    <path start="process_offer_outreach_thirdprty_faxemail_tx"/>
+    <path start="process_offer_outreach_thirdprty_hosting_tx"/>
+    <path start="process_offer_outreach_thirdprty_hostingqsc_tx"/>
+    <path start="process_offer_outreach_thirdprty_hostingwst_tx"/>
+    <path start="process_offer_outreach_thirdprty_logodesign_tx"/>
+    <path start="process_offer_outreach_thirdprty_metro_tx"/>
+    <path start="process_offer_outreach_thirdprty_metroosd_tx"/>
+    <path start="process_offer_outreach_thirdprty_onlinestorage_tx"/>
+    <path start="process_offer_outreach_thirdprty_outlook_tx"/>
+    <path start="process_offer_outreach_thirdprty_phoenix_tx"/>
+    <path start="process_offer_outreach_thirdprty_photoalbum_tx"/>
+    <path start="process_offer_outreach_thirdprty_podcast_tx"/>
+    <path start="process_offer_outreach_thirdprty_premiumlisting_tx"/>
+    <path start="process_offer_outreach_thirdprty_protection_tx"/>
+    <path start="process_offer_outreach_thirdprty_proxima_tx"/>
+    <path start="process_offer_outreach_thirdprty_safesite_tx"/>
+    <path start="process_offer_outreach_thirdprty_smartdomain_tx"/>
+    <path start="process_offer_outreach_thirdprty_smtprelay_tx"/>
+    <path start="process_offer_outreach_thirdprty_socialstream_tx"/>
+    <path start="process_offer_outreach_thirdprty_survey_tx"/>
+    <path start="process_offer_outreach_thirdprty_totaldns_tx"/>
+    <path start="process_offer_outreach_thirdprty_videome_tx"/>
+    <path start="process_offer_outreach_thirdprty_virtualhosting_tx"/>
+    <path start="process_offer_outreach_thirdprty_weblog_tx"/>
+    <path start="run_billingaccountexternalresource_tx"/>
+    <path start="run_ssl_billing_snap_tx"/>
+
+    <path start="adspace_tx2"/>
+    <path start="brandcatch_tx2"/>
+    <path start="brokerage_tx2"/>
+    <path start="calendar_tx2"/>
+    <path start="cashpark_tx2"/>
+    <path start="cdn_tx2"/>
+    <path start="coldfusion_tx2"/>
+    <path start="custmgr_tx2"/>
+    <path start="datacenter_tx2"/>
+    <path start="dedhost_tx2"/>
+    <path start="dedicatedip_tx2"/>
+    <path start="deluxestat_tx2"/>
+    <path start="domainasset_tx2"/>
+    <path start="domainrep_tx2"/>
+    <path start="easydb_tx2"/>
+    <path start="email_tx2"/>
+    <path start="emailfwd_tx2"/>
+    <path start="faxemail_tx2"/>
+    <path start="hosting_tx2"/>
+    <path start="hostingqsc_tx2"/>
+    <path start="hostingwst_tx2"/>
+    <path start="logodesign_tx2"/>
+    <path start="metro_tx2"/>
+    <path start="metroosd_tx2"/>
+    <path start="onlinestorage_tx2"/>
+    <path start="outlook_tx2"/>
+    <path start="phoenix_tx2"/>
+    <path start="photoalbum_tx2"/>
+    <path start="podcast_tx2"/>
+    <path start="premiumlisting_tx2"/>
+    <path start="protection_tx2"/>
+    <path start="proxima_tx2"/>
+    <path start="safesite_tx2"/>
+    <path start="smartdomain_tx2"/>
+    <path start="smtprelay_tx2"/>
+    <path start="socialstream_tx2"/>
+    <path start="survey_tx2"/>
+    <path start="totaldns_tx2"/>
+    <path start="videome_tx2"/>
+    <path start="virtualhosting_tx2"/>
+    <path start="weblog_tx2"/>
+    <path start="accountexternalresource_tx2"/>
+    <path start="run_ssl_billing_snap_tx2"/>
+  </fork>
+
+  <action name="process_offer_outreach_thirdprty_adspace_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_tx_file}</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_adspace-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_brandcatch_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_brandcatch-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_brokerage_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_brokerage-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_calendar_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_calendar-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_cashpark_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_cashpark-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_hostingwst_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_hostingwst-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_logodesign_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_logodesign-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_metro_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_metro-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_metroosd_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_metroosd-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_onlinestorage_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_onlinestorage-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_cdn_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_cdn-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_coldfusion_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_coldfusion-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_custmgr_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_custmgr-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_datacenter_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_datacenter-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_dedhost_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_dedhost-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_dedicatedip_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_dedicatedip-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_deluxestat_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_deluxestat-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_domainasset_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_domainasset-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_domainrep_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_domainrep-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_easydb_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_easydb-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_email_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_email-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_emailfwd_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_emailfwd-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_faxemail_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_faxemail-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_hosting_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_hosting-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_hostingqsc_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_hostingqsc-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_outlook_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_outlook-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_phoenix_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_phoenix-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_photoalbum_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_photoalbum-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_podcast_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_podcast-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_premiumlisting_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_premiumlisting-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_protection_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_protection-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_proxima_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_proxima-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_safesite_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_safesite-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_smartdomain_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_smartdomain-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_smtprelay_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_smtprelay-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_socialstream_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_socialstream-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_survey_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_survey-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_totaldns_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_totaldns-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_videome_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_videome-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_virtualhosting_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_virtualhosting-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="process_offer_outreach_thirdprty_weblog_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_weblog-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="run_billingaccountexternalresource_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/outreach_billingaccountexternalresource-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="run_ssl_billing_snap_tx"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/outreach_ssl_billing_snap-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="adspace_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_tx_file}</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_adspace-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="brandcatch_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_brandcatch-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="brokerage_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_brokerage-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="calendar_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_calendar-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="cashpark_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_cashpark-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="hostingwst_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_hostingwst-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="logodesign_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_logodesign-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="metro_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_metro-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="metroosd_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_metroosd-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="onlinestorage_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_onlinestorage-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="cdn_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_cdn-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="coldfusion_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_coldfusion-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="custmgr_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_custmgr-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="datacenter_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_datacenter-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="dedhost_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_dedhost-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="dedicatedip_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_dedicatedip-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="deluxestat_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_deluxestat-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="domainasset_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_domainasset-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="domainrep_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_domainrep-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="easydb_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_easydb-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="email_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_email-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="emailfwd_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_emailfwd-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="faxemail_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_faxemail-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="hosting_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_hosting-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="hostingqsc_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_hostingqsc-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="outlook_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_outlook-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="phoenix_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_phoenix-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="photoalbum_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_photoalbum-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="podcast_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_podcast-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="premiumlisting_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_premiumlisting-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="protection_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_protection-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="proxima_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_proxima-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="safesite_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_safesite-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="smartdomain_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_smartdomain-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="smtprelay_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_smtprelay-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="socialstream_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_socialstream-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="survey_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_survey-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="totaldns_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_totaldns-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="videome_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_videome-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="virtualhosting_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_virtualhosting-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="weblog_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/offer_outreach_thirdprty_weblog-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="accountexternalresource_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/outreach_billingaccountexternalresource-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+  <action name="run_ssl_billing_snap_tx2"  retry-max="2" retry-interval="1" cred="hcat">
+    <pig>
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>/user/hdp_datamgmt/oozie/datainsights/demo_offer_outreach_daily/demo_offer_outreach_tx.pig</script>
+      <param>last_tx_date=${DAY_BEFORE_YESTERDAY_DATE}</param>
+      <argument>-param_file</argument>
+      <argument>${param_file_location_for_txtable}/outreach_ssl_billing_snap-tx.param</argument>
+    </pig>
+    <ok to="joining"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+
+  <join name="joining" to="populate_tx"/>
+
+  <action name="populate_tx" cred="hcat" retry-max="2" retry-interval="1" >
+    <hive xmlns="uri:oozie:hive-action:0.5">
+      <configuration>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>uds_offer_outreach</value>
+        </property>
+      </configuration>
+      <script>${demo_offer_outreach_tx_hive_file}</script>
+    </hive>
+    <ok to="delete_running_flag"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+
+  <action name="delete_running_flag" cred="hcat">
+    <fs>
+      <delete path='${demo_offer_outreach_running}'/>
+    </fs>
+    <ok to="write_success_flag"/>
+    <error to="sub-wf-log_failure_oozie"/>
+  </action>
+
+  <action name="write_success_flag" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="${success_dir}/${YESTERDAY_DATE}" />
+      <touchz path="${success_dir}/${YESTERDAY_DATE}/_SUCCESS_DAILY" />
+    </fs>
+    <ok to="sub-wf-log_success_oozie" />
+    <error to="sub-wf-log_failure_oozie" />
+  </action>
+
+  <!-- Sub-workflow which use logs success entry to replace send success email -->
+  <action name="sub-wf-log_success_oozie" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="dummy"/>
+    </fs>
+    <ok to="success" />
+    <error to="kill" />
+  </action>
+
+  <!-- Sub-workflow which use logs failure entry before send failure email -->
+  <action name="sub-wf-log_failure_oozie" retry-max="2" retry-interval="1" >
+    <fs>
+      <mkdir path="dummy"/>
+    </fs>
+    <ok to="send_failure_email" />
+    <error to="send_failure_email" />
+  </action>
+
+  <action name="send_failure_email">
+    <email xmlns="uri:oozie:email-action:0.1">
+      <to>${emailGroup}</to>
+      <subject>Oozie failure for dp_enterprise.demo_offer_outreach_tx DAILY for ${TODAY_DATE}
+      </subject>
+      <body>
+        Bundle bundle-uds_offer_outreach_external_resource
+          : Coordinator coordinator-demo_offer_outreach_tx
+            : Workflow workflow-demo_offer_outreach_tx
+
+
+        This is a result of a main workflow failure.  It is required to restart this coordinator from the begining.  Do not restart the workflow.
+
+        Follow the instructions below:
+
+        1. Query the coordinator_id that failed to obtain the most current action_id with the following:
+              oozie job -info _coordinator_id_ -verbose
+
+        2. Restart a coordinator with the following:
+              oozie job -rerun _coordinator_id_ -action _action_id_
+
+
+        The dp_enterprise.demo_offer_outreach_tx process for ${TODAY_DATE}  with id ${wf:id()} failed with message:
+          [${wf:errorMessage(wf:lastErrorNode())}]
+      </body>
+    </email>
+    <ok to="kill" />
+    <error to="EmailFailed" />
+  </action>
+
+  <kill name="EmailFailed">
+    <message>Error E-Mail failed to send:
+      [${wf:errorMessage(wf:lastErrorNode())}]
+    </message>
+  </kill>
+
+  <kill name="kill">
+    <message>Action failed, error message:
+      [${wf:errorMessage(wf:lastErrorNode())}]
+    </message>
+  </kill>
+
+  <end name="success" />
+
+</workflow-app>

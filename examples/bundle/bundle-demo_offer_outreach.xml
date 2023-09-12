@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle-app name='bundle-demo_offer_outreach' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns='uri:oozie:bundle:0.2'>
+  <parameters>
+    <property>
+      <name>coordStartDate</name>
+    </property>
+    <property>
+      <name>coordEndDate</name>
+    </property>
+  </parameters>
+
+  <coordinator name="coordinator-demo_offer_outreach_tx">
+    <app-path>coordinator-demo_offer_outreach_tx.xml</app-path>
+  </coordinator>
+
+  <coordinator name="coordinator-demo_offer_outreach">
+    <app-path>coordinator-demo_offer_outreach.xml</app-path>
+  </coordinator>
+
+</bundle-app>

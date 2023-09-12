@@ -12,6 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Tests Spark Mapper"""
 import ast
 import unittest
@@ -100,24 +117,28 @@ class TestSparkMapperWithPrepare(unittest.TestCase):
                 Task(
                     task_id="test_id_prepare",
                     template_name="prepare.tpl",
+                    trigger_rule="one_success",
                     template_params={"delete": "/tmp/d_path", "mkdir": "/tmp/mk_path"},
                 ),
                 Task(
                     task_id="test_id",
                     template_name="spark.tpl",
+                    trigger_rule="one_success",
                     template_params={
-                        "main_jar": None,
-                        "main_class": "org.apache.spark.examples.mllib.JavaALS",
-                        "arguments": ["inputpath=hdfs:///input/file.txt", "value=2"],
-                        "hdfs_archives": [],
-                        "hdfs_files": [],
-                        "job_name": "Spark Examples",
-                        "spark_opts": {
-                            "spark.executor.extraJavaOptions": "-XX:+HeapDumpOnOutOfMemoryError "
-                            "-XX:HeapDumpPath=/tmp"
-                        },
-                        "dataproc_spark_jars": ["/lib/spark-examples_2.10-1.1.0.jar"],
-                    },
+                        'step':
+                            ['spark-submit',
+                             '--conf',
+                             'spark.executor.extraJavaOptions=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp',
+                             '--class', 'org.apache.spark.examples.mllib.JavaALS', '/lib/spark-examples_2.10-1.1.0.jar',
+                             'inputpath=hdfs:///input/file.txt', 'value=2'],
+                             'main_jar': '/lib/spark-examples_2.10-1.1.0.jar',
+                             'main_class': 'org.apache.spark.examples.mllib.JavaALS',
+                             'arguments':
+                                    ['inputpath=hdfs:///input/file.txt', 'value=2'],
+                                    'hdfs_archives': [],
+                                    'hdfs_files': [],
+                                    'job_name': 'Spark Examples',
+                                    'emr_spark_jars': ['/lib/spark-examples_2.10-1.1.0.jar'], 'spark_opts': {}}
                 ),
             ],
             tasks,
@@ -139,24 +160,27 @@ class TestSparkMapperWithPrepare(unittest.TestCase):
                     template_name="spark.tpl",
                     trigger_rule="one_success",
                     template_params={
-                        "main_jar": None,
-                        "main_class": "org.apache.spark.examples.mllib.JavaALS",
-                        "arguments": [
-                            "inputpath=hdfs:///input/file.txt",
-                            "value=2",
-                            "/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar",
-                        ],
-                        "hdfs_archives": [],
-                        "hdfs_files": [],
-                        "job_name": "Spark Examples",
-                        "dataproc_spark_jars": [
-                            "/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar"
-                        ],
-                        "spark_opts": {
-                            "spark.executor.extraJavaOptions": "-XX:+HeapDumpOnOutOfMemoryError "
-                            "-XX:HeapDumpPath=/tmp"
-                        },
-                    },
+                        'step': [
+                            'spark-submit',
+                            '--conf',
+                            'spark.executor.extraJavaOptions=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp',
+                            '--class', 'org.apache.spark.examples.mllib.JavaALS',
+                            '/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar',
+                            'inputpath=hdfs:///input/file.txt',
+                            'value=2',
+                            '/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar'],
+                            'main_jar': '/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar',
+                            'main_class': 'org.apache.spark.examples.mllib.JavaALS',
+                            'arguments': [
+                                'inputpath=hdfs:///input/file.txt',
+                                'value=2',
+                                '/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar'],
+                                'hdfs_archives': [],
+                                'hdfs_files': [],
+                                'job_name': 'Spark Examples',
+                                'emr_spark_jars': [
+                                    '/user/{{userName}}/{{examplesRoot}}/apps/spark/lib/oozie-examples-4.3.0.jar'],
+                                    'spark_opts': {}}
                 )
             ],
             tasks,

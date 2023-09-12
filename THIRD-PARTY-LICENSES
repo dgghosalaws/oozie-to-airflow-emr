@@ -1,0 +1,8 @@
+3RD PARTY LICENSES
+
+Note that not all files in the oozie-to-airflow repository and in the released
+software packages belong to the oozietoairflow project. For 3rd party files,
+the individual licenses apply.
+
+* oozie-to-airflow (https://github.com/GoogleCloudPlatform/oozie-to-airflow)
+    Apache License 2.0, http://www.apache.org/licenses/

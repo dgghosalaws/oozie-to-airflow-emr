@@ -12,9 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+#Modifications Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-O2A_DIR="$( cd "${MY_DIR}/.." && pwd )"
+O2PW_DIR="$( cd "${MY_DIR}/.." && pwd )"
 
 
-find "${O2A_DIR}" -name 'workflow.xml' -print0 | xargs -0 "${MY_DIR}/o2a-validate-workflows"
+find "${O2PW_DIR}" -name 'workflow.xml' -print0 | xargs -0 "${MY_DIR}/o2a-validate-workflows"

@@ -12,13 +12,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Maps Oozie pig node to Airflow's DAG"""
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Maps Oozie Hive node to Airflow's DAG"""
 import os
 import shutil
-from typing import Dict, Set, Optional, List
+from typing import List, Optional, Set
 
 from xml.etree.ElementTree import Element
-
 
 from o2a.converter.exceptions import ParseException
 from o2a.converter.task import Task
@@ -27,11 +43,9 @@ from o2a.mappers.extensions.prepare_mapper_extension import PrepareMapperExtensi
 from o2a.o2a_libs.property_utils import PropertySet
 from o2a.utils.file_archive_extractors import ArchiveExtractor, FileExtractor
 
-
 # pylint: disable=too-many-instance-attributes
 from o2a.utils.param_extractor import extract_param_values_from_action_node
 from o2a.utils.xml_utils import get_tag_el_text
-
 
 TAG_SCRIPT = "script"
 TAG_QUERY = "query"
@@ -44,7 +58,8 @@ class HiveMapper(ActionMapper):
 
     def __init__(self, oozie_node: Element, name: str, props: PropertySet, **kwargs):
         ActionMapper.__init__(self, oozie_node=oozie_node, name=name, props=props, **kwargs)
-        self.variables: Optional[Dict[str, str]] = None
+        # self.variables: Optional[Dict[str, str]] = None
+        self.variables: Optional[str] = None
         self.query: Optional[str] = None
         self.script: Optional[str] = None
         self.hdfs_files: Optional[List[str]] = None
@@ -68,6 +83,13 @@ class HiveMapper(ActionMapper):
             )
 
         self.variables = extract_param_values_from_action_node(self.oozie_node)
+
+        """ Append hive script run parameters."""
+        self.variables.insert(0, f"{self.script}")
+        self.variables.insert(0, "-f")
+        self.variables.insert(0, "--args")
+        self.variables.insert(0, "--run-hive-script")
+        self.variables.insert(0, "hive-script")
         _, self.hdfs_files = self.file_extractor.parse_node()
         _, self.hdfs_archives = self.archive_extractor.parse_node()
 
@@ -89,7 +111,6 @@ class HiveMapper(ActionMapper):
         prepare_task = self.prepare_extension.get_prepare_task()
         if prepare_task:
             tasks, relations = self.prepend_task(prepare_task, tasks, relations)
-
         return tasks, relations
 
     def copy_extra_assets(self, input_directory_path: str, output_directory_path: str):
@@ -101,4 +122,13 @@ class HiveMapper(ActionMapper):
         shutil.copy(source_script_file_path, destination_script_file_path)
 
     def required_imports(self) -> Set[str]:
-        return {"from airflow.utils import dates", "from airflow.contrib.operators import dataproc_operator"}
+        # Bash are for the potential prepare statement
+        return {
+            "import airflow",
+            "from airflow.utils import dates",
+            "from o2a.o2a_libs.operator.emr_submit_and_monitor_step_operator import "
+            "EmrSubmitAndMonitorStepOperator",
+            "from airflow.contrib.operators.emr_add_steps_operator import EmrAddStepsOperator",
+            "from airflow.contrib.sensors.emr_step_sensor import EmrStepSensor",
+            "",
+        }

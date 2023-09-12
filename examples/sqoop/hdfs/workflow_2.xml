@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="${workflow_name}">
+    <start to="SQOOP"/>
+    <action name="SQOOP">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.4">
+            <job-tracker>${resourceManager}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <command>job --exec ${sqoop_name}</command>
+        </sqoop>
+        <ok to="int_load"/>
+        <error to="kill"/>
+    </action>
+    <action name="int_load">
+        <java>
+            <job-tracker>${resourceManager}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <main-class>fca.bi.datalake.SnowflakeClient</main-class>
+            <arg>${database_name}</arg>
+            <arg>${schema_name}</arg>
+            <arg>${table_name}</arg>
+            <file>s3://s3-09212-d-004-scripts/jar/snowflake-client-1.0.jar</file>
+        </java>
+        <ok to="end"/>
+        <error to="kill"/>
+    </action>
+    <kill name="kill">
+        <message>${wf:errorMessage(wf:lastErrorNode())}</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

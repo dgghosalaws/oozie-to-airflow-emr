@@ -12,7 +12,10 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
-#}
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+ #}
+
 {% import "macros/props.tpl" as props_macro %}
 {{ task_id | to_var }} = email_operator.EmailOperator(
     task_id={{ task_id | to_python }},

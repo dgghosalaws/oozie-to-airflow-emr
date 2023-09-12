@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coordinator-app name="coordinator-demo_offer_outreach" frequency="${coord:days(1)}"
+                 start="${coordStartDate}T07:05Z" end="${coordEndDate}T07:05Z" timezone="UTC"
+                 xmlns="uri:oozie:coordinator:0.4" xmlns:sla="uri:oozie:sla:0.2">
+  <controls>
+    <timeout>1440</timeout>
+    <concurrency>1</concurrency>
+  </controls>
+
+  <datasets>
+    <dataset name="ds-success-out" frequency="${coord:days(1)}" initial-instance="2015-07-20T07:00Z" timezone="UTC">
+      <uri-template>local_hdfs/demo_offer_outreach/${YEAR}-${MONTH}-${DAY}</uri-template>
+      <done-flag></done-flag>
+    </dataset>
+    <dataset name="ds-demo_offer_outreach_tx" frequency="${coord:endOfDays(1)}" initial-instance="2015-07-20T07:00Z" timezone="UTC">
+      <uri-template>local_hdfs/demo_offer_outreach_tx/${YEAR}-${MONTH}-${DAY}</uri-template>
+      <done-flag>_SUCCESS_DAILY</done-flag>
+    </dataset>
+  </datasets>
+
+  <input-events>
+    <data-in name="di-demo_offer_outreach_tx" dataset="ds-demo_offer_outreach_tx">
+      <instance>${coord:current(-1)}</instance>
+    </data-in>
+  </input-events>
+
+  <output-events>
+    <data-out name="oe-success-out" dataset="ds-success-out">
+      <instance>${coord:current(-1)}</instance>
+    </data-out>
+  </output-events>
+
+  <action>
+
+    <workflow>
+        <app-path>workflow-demo_offer_outreach.xml</app-path>
+        <configuration>
+          <property>
+            <name>demo_offer_outreach_stage_ddl</name>
+            <value>hiveddl/demo_offer_outreach_stage.ddl</value>
+          </property>
+          <property>
+            <name>demo_offer_outreach_pig_file</name>
+            <value>demo_offer_outreach.pig</value>
+          </property>
+          <property>
+            <name>demo_offer_outreach_hive_file</name>
+            <value>demo_offer_outreach.hive</value>
+          </property>
+          <property>
+            <name>jar_location</name>
+            <value>${nameNode}/user/hdp_datamgmt/lib/</value>
+          </property>
+          <property>
+            <name>YESTERDAY_DATE</name>
+            <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(), -1, 'DAY'), 'yyyy-MM-dd')}</value>
+          </property>
+          <property>
+            <name>TODAY_DATE</name>
+            <value>${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd')}</value>
+          </property>
+          <property>
+            <name>success_dir</name>
+            <value>local_hdfs/demo_offer_outreach/</value>
+          </property>
+
+          <property>
+            <name>audit_script</name>
+            <value>audit.hive</value>
+          </property>
+          <property>
+            <name>audit_database_name</name>
+            <value>dp_enterprise</value>
+          </property>
+          <property>
+            <name>audit_bundle_name</name>
+            <value>bundle-demo_offer_outreach.xml</value>
+          </property>
+          <property>
+            <name>audit_coordinator_name</name>
+            <value>coordinator-demo_offer_outreach.xml</value>
+          </property>
+          <property>
+            <name>audit_workflow_name</name>
+            <value>workflow-demo_offer_outreach.xml</value>
+          </property>
+          <property>
+            <name>audit_dag_name</name>
+            <value>NULL</value>
+          </property>
+          <property>
+            <name>audit_table_name</name>
+            <value>demo_offer_outreach</value>
+          </property>
+
+        </configuration>
+    </workflow>
+
+  </action>
+
+</coordinator-app>

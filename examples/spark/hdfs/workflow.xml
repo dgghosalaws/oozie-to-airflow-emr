@@ -12,6 +12,8 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
  -->
 
 <!--
@@ -31,33 +33,42 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<workflow-app xmlns='uri:oozie:workflow:1.0' name='SparkFileCopy'>
+<workflow-app xmlns='uri:oozie:workflow:1.0' name='WeatherAggregationJob'>
     <start to='spark-node' />
 
     <action name='spark-node'>
         <spark xmlns="uri:oozie:spark-action:1.0">
             <resource-manager>${resourceManager}</resource-manager>
             <name-node>${nameNode}</name-node>
-            <prepare>
-                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/apps/spark/lib/oozie-examples-4.3.0-copy.jar"/>
-            </prepare>
-            <configuration>
-                <property>
-                    <name>test.property.node</name>
-                    <value>${nameNode}</value>
-                </property>
-            </configuration>
+            <!--            <prepare>-->
+            <!--                <delete path="s3://aws-proserve-hadoop-migration/${examplesRoot}/output-data/spark"/>-->
+            <!--            </prepare>-->
             <master>${master}</master>
-            <name>Spark-FileCopy</name>
-            <class>org.apache.oozie.example.SparkFileCopy</class>
-            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/spark/lib/oozie-examples-4.3.0.jar</jar>
-            <arg>/user/${wf:user()}/${examplesRoot}/apps/spark/lib/oozie-examples-4.3.0.jar</arg>
-            <arg>/user/${wf:user()}/${examplesRoot}/apps/spark/lib/oozie-examples-4.3.0-copy.jar</arg>
+            <mode>${mode}</mode>
+            <name>Weather-Aggregation-Spark</name>
+            <jar>s3://aws-proserve-hadoop-migration/application/code/spark/aggregations.py</jar>
+            <arg>s3://aws-proserve-hadoop-migration/data/raw/hourly_weather/2006</arg>
+            <arg>s3://aws-proserve-hadoop-migration/data/hive_db/raw_weather_data/hourly_weather</arg>
+            <arg>s3://aws-proserve-hadoop-migration/data/hive_db/aggregate_weather_data/daily_weather</arg>
         </spark>
-        <ok to="end" />
+        <ok to="hive-node" />
         <error to="fail" />
     </action>
-
+    <action name="hive-node">
+        <hive xmlns="uri:oozie:hive-action:1.0">
+            <resource-manager>${resourceManager}</resource-manager>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+            <script>s3://aws-proserve-hadoop-migration/application/code/hive/monthly_weather_calculation.hql</script>
+        </hive>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
     <kill name="fail">
         <message>Workflow failed, error
             message[${wf:errorMessage(wf:lastErrorNode())}]

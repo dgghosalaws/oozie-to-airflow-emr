@@ -13,13 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+#Modifications Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#SPDX-License-Identifier: Apache-2.0
 """Entry script for the o2a main function"""
 from os import path
 
 import sys
 
 sys.path.insert(0, path.abspath(path.join(path.dirname(__file__), path.pardir)))
-
 if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 6):
     print("")
     print(
@@ -34,6 +36,8 @@ if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_in
 import o2a.o2a  # noqa: E402
 
 if __name__ == "__main__":
-    print("")
+    print("*********************STARTING OOZIE TO AIRFLOW CONVERSION***********************")
+    print()
     o2a.o2a.main()
-    print("")
+    print()
+    print("*********************COMPLETED OOZIE TO AIRFLOW CONVERSION***********************")

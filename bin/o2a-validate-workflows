@@ -12,14 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+#Modifications Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-O2A_DIR="$( cd "${MY_DIR}/.." && pwd )"
+O2PW_DIR="$( cd "${MY_DIR}/.." && pwd )"
 
-if [[ -d "${O2A_DIR}/o2a/schema/" ]]; then
-    SCHEMA_DIR="${O2A_DIR}/o2a/schema"
+if [[ -d "${O2PW_DIR}/o2a/schema/" ]]; then
+    SCHEMA_DIR="${O2PW_DIR}/o2a/schema"
 else
-    SCHEMA_DIR="$(python3 -c 'import os; import o2a; print(os.path.dirname(o2a.__file__))')/schema"
+    SCHEMA_DIR="$(python3 -c 'import os; import o2a; print(os.path.dirname(o2a.__file__))')/schema/1.0"
 fi
 
 FAILED_WORKFLOWS=""
@@ -30,13 +33,13 @@ if [[ "${VERBOSE}" != "" ]]; then
     XMLLINT_EXTRA_PARAMS="--load-trace"
 fi
 
-for WORKFLOW in "$@"; do
+for WORKFLOW in "$1"; do
     echo
-    echo "Validating ${WORKFLOW}"
+    echo "Validating ${WORKFLOW} with XML Schema version ${2}"
     echo
     set +e
-    # Note - if you add new actions add the schema for this action to "all-schemas-1.0.xsd"
-    xmllint --noout ${XMLLINT_EXTRA_PARAMS} --schema "${SCHEMA_DIR}/all-schemas-1.0.xsd" "${WORKFLOW}"
+    # Note - if you add new actions add the schema for this action to "all-schemas-0.4.xsd"
+    xmllint --noout ${XMLLINT_EXTRA_PARAMS} --schema "${SCHEMA_DIR}/${2}/all-schemas-${2}.xsd" "${WORKFLOW}"
     ERR=$?
     set -e
     if [[ ${ERR} != "0" ]]; then
@@ -47,9 +50,9 @@ done
 
 if [[ "${FAILED_WORKFLOWS}" != "" ]]; then
     echo
-    echo
+    echo "************************************************************************************"
     echo "Some workflows failed validation:"
-    echo
+    echo "************************************************************************************"
     for WORKFLOW in ${FAILED_WORKFLOWS}
     do
         echo "${WORKFLOW}"
@@ -58,7 +61,7 @@ if [[ "${FAILED_WORKFLOWS}" != "" ]]; then
     echo
     exit 1
 else
-    echo
+    echo "************************************************************************************"
     echo "Workflows validated properly"
-    echo
+    echo "************************************************************************************"
 fi

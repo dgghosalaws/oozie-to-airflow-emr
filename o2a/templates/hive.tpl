@@ -12,18 +12,19 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
  #}
 
+{#
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+#}
 {% import "macros/props.tpl" as props_macro %}
-{{ task_id | to_var }} = dataproc_operator.DataProcHiveOperator(
+{{ task_id | to_var }} = EmrSubmitAndMonitorStepOperator(
     task_id={{ task_id | to_python }},
-    trigger_rule={{ trigger_rule | to_python }},
-    {% if script %}query_uri='{}/{}'.format(CONFIG['gcp_uri_prefix'], {{ script | to_python }}),{% endif %}
-    {% if query %}query={{ query | to_python }},{% endif %}
-    {% if variables %}variables={{ variables | to_python }},{% endif %}
-    dataproc_hive_properties={{ props_macro.props(action_node_properties=action_node_properties, xml_escaped=True) }},
-    cluster_name=CONFIG['dataproc_cluster'],
-    gcp_conn_id=CONFIG['gcp_conn_id'],
-    region=CONFIG['gcp_region'],
-    job_name={{ task_id | to_python }},
+    {% if script %}steps = [{'Name': {{ task_id | to_python }},'ActionOnFailure': 'CONTINUE','HadoopJarStep': {'Jar': 'command-runner.jar','Args': {{ variables | to_python }},},}],{% endif %}
+    {% if query %}steps = [{'Name': {{ task_id | to_python }},'ActionOnFailure': 'CONTINUE','HadoopJarStep': {'Jar': 'command-runner.jar','Args': ['hive','-e',{{ query | to_python }}],},}],{% endif %}
+    job_flow_id=CONFIG['emr_cluster'],
+    aws_conn_id=CONFIG['aws_conn_id'],
 )

@@ -1,23 +1,27 @@
-apache-airflow==1.10.14 # pyup: ignore
+apache-airflow==2.4.3
 autoflake==1.4
-black==20.8b1
-flake8==3.8.4
-google-api-python-client==1.12.8
-isort==5.7.0
+black==22.12.0
+#flake8==3.8.4
+google-api-python-client==1.12.3
+isort==5.6.4
+itsdangerous==2.0.1
 j2cli==0.3.10
-Jinja2==2.11.2 # pyup: ignore
-lark-parser==0.11.1
-mypy==0.790
-parameterized==0.7.5
+#Jinja2==2.11.2
+Jinja2==3.0.0
+lark-parser==0.10.1
+markupsafe==2.1.1
+#mypy==0.790
+parameterized==0.7.4
 paramiko==2.7.2
-pre-commit==2.10.1
-pydeps==1.9.13
+pre-commit==2.7.1
+#pydeps==1.9.9
 pylint==2.6.0
-pytest==6.2.1
-pytest-cov==2.11.1
-safety==1.10.3
-sshtunnel==0.4.0
-twine==3.3.0
-tzlocal==2.1 # pyup: ignore
-Werkzeug==1.0.1 # pyup: ignore
+#pytest==6.1.1
+#pytest-cov==2.10.1
+#safety==1.9.0
+sshtunnel==0.1.5
+twine==3.2.0
+typed-ast==1.5.4
+#tzlocal==1.5.1 # pyup: ignore
+Werkzeug==2.2.2 # pyup: ignore
 yamllint==1.25.0

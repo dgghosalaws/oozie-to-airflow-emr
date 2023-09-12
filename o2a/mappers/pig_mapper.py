@@ -12,12 +12,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# -*- coding: utf-8 -*-
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Maps Oozie pig node to Airflow's DAG"""
 import os
 from typing import Dict, List, Set
 
 from xml.etree.ElementTree import Element
-
 
 from o2a.converter.task import Task
 from o2a.converter.relation import Relation
@@ -27,7 +43,6 @@ from o2a.o2a_libs.property_utils import PropertySet
 from o2a.utils.file_archive_extractors import ArchiveExtractor, FileExtractor
 from o2a.utils.param_extractor import extract_param_values_from_action_node
 from o2a.utils.xml_utils import get_tag_el_text
-
 
 TAG_RESOURCE = "resource-manager"
 TAG_NAME = "name-node"
@@ -53,7 +68,13 @@ class PigMapper(ActionMapper):
         self.name_node = get_tag_el_text(self.oozie_node, TAG_NAME)
         self.script_file_name = get_tag_el_text(self.oozie_node, TAG_SCRIPT)
 
-        self.params_dict = extract_param_values_from_action_node(self.oozie_node)
+        self.params_dict = extract_param_values_from_action_node(self.oozie_node, "-p")
+        # self.params_dict.insert(0, "{}/{}".format(self.props.config.get("s3_uri_prefix"), self.script_file_name))
+        self.params_dict.insert(0, "{}".format(self.script_file_name))
+        self.params_dict.insert(0, "-f")
+        self.params_dict.insert(0, "--args")
+        self.params_dict.insert(0, "--run-pig-script")
+        self.params_dict.insert(0, "pig-script")
         self.files, self.hdfs_files = self.file_extractor.parse_node()
         self.archives, self.hdfs_archives = self.archive_extractor.parse_node()
 
@@ -105,4 +126,8 @@ class PigMapper(ActionMapper):
             raise Exception(f"The output_directory_path should be set and is {output_directory_path}")
 
     def required_imports(self) -> Set[str]:
-        return {"from airflow.utils import dates", "from airflow.contrib.operators import dataproc_operator"}
+        return {
+            "from airflow.utils import dates",
+            "from o2a.o2a_libs.operator.emr_submit_and_monitor_step_operator import "
+            "EmrSubmitAndMonitorStepOperator",
+        }
