@@ -109,7 +109,6 @@ class EmrHook(AwsBaseHook):
             - `API RunJobFlow <https://docs.aws.amazon.com/emr/latest/APIReference/API_RunJobFlow.html>`_
         """
         config = {}
-        is_private_subnet = True
         if self.emr_conn_id:
             try:
                 emr_conn = self.get_connection(self.emr_conn_id)
@@ -132,29 +131,8 @@ class EmrHook(AwsBaseHook):
                     )
                 config = emr_conn.extra_dejson.copy()
         config.update(job_flow_overrides)
-        pretty_json = json.dumps(config, indent=4)
-        self.log.info("Performing check to validate usage of private subnet !!!")
-        if not ("Ec2SubnetId" in config["Instances"] or "Ec2SubnetIds" in config["Instances"]):
-
-                warnings.warn(
-                    f"Unable to find Ec2SubnetId or Ec2SubnetIds in {pretty_json} ,"
-                    f"If you want to get rid of this warning , "
-                    f"please use private subnet(s).",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                raise AirflowException(f"Cluster creation failed. Please verify cluster spec and provide private Subnet:{pretty_json}")
-        else:
-            #Validate if its Private subnet
-            region = subnet_verifier.detect_running_region()
-            subnet_verifier.client(region_name=region)
-            instances = config["Instances"]
-            is_private_subnet = subnet_verifier.validate_private_subnet(instances["Ec2SubnetId"])
-            if not is_private_subnet:
-                raise AirflowException(f"Cluster creation failed. Please verify cluster spec and provide private Subnet:{pretty_json}")
-        if is_private_subnet:
-            response = self.get_conn().run_job_flow(**config)
-            return response
+        response = self.get_conn().run_job_flow(**config)
+        return response
 
     def add_job_flow_steps(
         self,

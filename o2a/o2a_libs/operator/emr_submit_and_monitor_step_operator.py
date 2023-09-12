@@ -180,7 +180,6 @@ class EmrCreateJobFlowOperator(BaseOperator):
         wait_for_completion: bool = False,
         waiter_countdown: int | None = None,
         waiter_check_interval_seconds: int = 60,
-        private_subnet_deploy: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -191,8 +190,6 @@ class EmrCreateJobFlowOperator(BaseOperator):
         self.wait_for_completion = wait_for_completion
         self.waiter_countdown = waiter_countdown
         self.waiter_check_interval_seconds = waiter_check_interval_seconds
-        self.private_subnet_deploy = private_subnet_deploy
-
         self._job_flow_id: str | None = None
 
     @cached_property
