@@ -78,7 +78,7 @@ Current build is targeted to support all Hive mappings.
 # Running the Program
 
 Note that you need Python >= 3.6 to run the converter. The utility has been tested with Python = 3.9
-The  utility uses a custom Airflow operator [EmrSubmitAndMonitorStepOperator](oozie-to-airflow/o2a/o2a_libs/operator/emr_submit_and_monitor_step_operator.py) to submit EMR Steps.
+The  utility uses a custom Airflow operator [EmrSubmitAndMonitorStepOperator](o2a/o2a_libs/operator/emr_submit_and_monitor_step_operator.py) to submit EMR Steps.
 
 ## Installing from sources
 
